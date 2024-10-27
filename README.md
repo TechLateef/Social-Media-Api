@@ -16,14 +16,14 @@ This project is a robust and feature-rich API designed to power a modern social 
 
 - **Node.js** (>= v14.x.x)
 - **npm** or **yarn**
-- **MongoDB** for data storage (or the database of your choice if configured in the application)
+- **MongoDB** for data storage
 
 ### Installation
 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/social-media-api.git
+   git clone https://github.com/techlateef/social-media-api.git
    cd social-media-api
    ```
 
@@ -40,7 +40,8 @@ This project is a robust and feature-rich API designed to power a modern social 
 4. Start the server:
 
    ```bash
-   npm start
+   yarn run buirl
+   yarn run start
    ```
 
    The API should now be running on `http://localhost:3000`.
@@ -67,14 +68,11 @@ Here's an overview of the main API endpoints:
 ## Built With
 
 - **Node.js** - JavaScript runtime
+- **Typescript** - 
 - **Express** - Web framework for Node.js
 - **MongoDB** - Database for storing user, post, and interaction data
 
 ## Contributing
 
 Contributions are welcome! Feel free to submit issues, feature requests, or pull requests.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
