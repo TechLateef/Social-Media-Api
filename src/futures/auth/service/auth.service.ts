@@ -27,8 +27,9 @@ export class AuthService {
      * @param password user 8 digit password
      * @returns Json Web Token
      */
-    public async login(email: string, password: string): Promise<string> {
-        const isUser = await Auth.findOne({ email })
+    public async login(email: string, password: string): Promise<string | void> {
+        try {
+            const isUser = await Auth.findOne({ email })
         if (!isUser) {
             throw new Error('Invalid email or password')
         }
@@ -40,6 +41,10 @@ export class AuthService {
         }
 
         return isUser.getSignedToken()
+        } catch (error) {
+            console.error(error)
+            
+        }
     }
 
     /**
