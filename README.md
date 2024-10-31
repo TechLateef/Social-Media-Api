@@ -30,7 +30,7 @@ This project is a robust and feature-rich API designed to power a modern social 
 2. Install dependencies:
 
    ```bash
-   npm install
+   yarn install
    ```
 
 3. Configure environment variables:
@@ -40,7 +40,7 @@ This project is a robust and feature-rich API designed to power a modern social 
 4. Start the server:
 
    ```bash
-   yarn run buirl
+   yarn run build
    yarn run start
    ```
 
