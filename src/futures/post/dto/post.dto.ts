@@ -1,13 +1,20 @@
+import { IsOptional, IsString, IsUrl } from 'class-validator';
 import { IUser } from '../../auth/entities/auth.entity';
 import { Post } from '../entities/post.entity'
 
 
-export interface CreatePostDto {
+export class CreatePostDto {
+    @IsString()
+    @IsOptional()
     text?: string
-    postUrl: string
+
+    @IsUrl()
+    postUrl?: string
 }
 
-export interface createCommentDto {
-    content: string;
-    author: IUser
+export class createCommentDto {
+    @IsString()
+    content?: string;
+
+    author?: IUser
 }

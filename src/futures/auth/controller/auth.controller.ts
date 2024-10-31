@@ -96,7 +96,7 @@ export class AuthController {
 
             const editedProfile = await this.authService.editProfile(editProfileData, req.user?.id)
 
-            res.status(StatusCodes.OK).json({ message: 'success', editProfileData })
+            res.status(StatusCodes.OK).json({ message: 'success', editedProfile })
         } catch (error) {
 
             next(error)
