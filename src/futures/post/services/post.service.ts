@@ -2,8 +2,14 @@ import { createCommentDto, CreatePostDto } from "../dto/post.dto";
 import { Auth, IUser } from "../../auth/entities/auth.entity";
 import { IPost, Post } from "../entities/post.entity";
 import commentEntity, { IComment } from "../entities/comment.entity";
-import { Model } from "mongoose";
+import { Model, Document, Types } from "mongoose";
+import jsonResponse from "../../../core/utils/lib";
+import { StatusCodes } from "http-status-codes";
+import { Response } from "express";
 
+interface ILikable extends Document {
+    likes: (Types.ObjectId | string)[];
+}
 
 export class PostService {
 
@@ -29,7 +35,7 @@ export class PostService {
 
 
 
-    
+
     /**
  * @description Like or unlike an entity (post or comment) depending on the user's current reaction
  * @param entityType - The model (e.g., Post or Comment model)
@@ -37,7 +43,7 @@ export class PostService {
  * @param user - The authenticated user performing the action
  * @returns boolean - true if liked, false if unliked
  */
-    public async likeOrUnlike<T extends { likes: string[]; updateOne: Function }>(
+    public async likeOrUnlike<T extends ILikable>(
         entityType: Model<T>,
         entityId: string,
         user: IUser
@@ -70,12 +76,12 @@ export class PostService {
     }
 
 
-        /**
-         * @description fetch user post and  following users
-         * @param user Auth user
-         * @returns 
-         */
-    public async fetchAllPosts(user: IUser) {
+    /**
+     * @description fetch user post and  following users
+     * @param user Auth user
+     * @returns 
+     */
+    public async fetchAllPosts(user: IUser, res: Response) {
         try {
             const currentUser = await Auth.findById(user.id);
 
@@ -89,7 +95,7 @@ export class PostService {
             return allPosts;
         } catch (error) {
             console.error("Error fetching posts:", error);
-            throw error;
+            jsonResponse(StatusCodes.INTERNAL_SERVER_ERROR, '', res)
         }
     }
 

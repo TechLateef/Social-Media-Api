@@ -4,6 +4,9 @@ import { plainToClass } from "class-transformer";
 import { createCommentDto, CreatePostDto } from "../dto/post.dto";
 import { validate } from "class-validator";
 import { StatusCodes } from "http-status-codes";
+import { IPost, Post } from "../entities/post.entity";
+import { IUser } from "../../auth/entities/auth.entity";
+import jsonResponse from "../../../core/utils/lib";
 
 
 
@@ -49,4 +52,36 @@ export class PostController {
         }
     }
 
+
+    public likeorUnlikePost: RequestHandler = async (req, res, next): Promise<void> => {
+        try {
+            const postId = req.params.postId
+
+            const user = req.user as IUser
+            const liked = await this.postService.likeOrUnlike(Post, postId, user)
+
+            jsonResponse(StatusCodes.OK, '', res, liked ? "Post liked" : "Post unliked")
+        } catch (error) {
+            next(error)
+        }
+
+    }
+
+
+    public fetchPost: RequestHandler = async (req, res, next): Promise<void> => {
+ try {
+    const user = req.user as IUser
+
+    const allPost = await this.postService.fetchAllPosts(user,res)
+    if (!allPost) {
+        return allPost
+    }
+
+    jsonResponse(StatusCodes.OK, '', res, 'success')
+
+ } catch (error) {
+  next(error)  
+ }
+
+    }
 }
