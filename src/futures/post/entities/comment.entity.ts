@@ -1,5 +1,6 @@
-import { Types, Schema, model } from "mongoose";
+import { Document, Types, Schema, model, Model } from "mongoose";
 
+// Extend Document to inherit Mongoose-specific properties
 export interface IComment extends Document {
     post: Types.ObjectId;       // The post this comment is attached to
     author: Types.ObjectId;     // The user who made the comment
@@ -8,15 +9,16 @@ export interface IComment extends Document {
     replies: Types.ObjectId[];  // Array of replies (comments referencing comments)
 }
 
-const CommentSchema = new Schema({
+// Define the schema
+const CommentSchema = new Schema<IComment>({
     post: {
         type: Schema.Types.ObjectId,
-        ref: 'Post',  // Reference to the post this comment belongs to
+        ref: 'Post',
         required: true,
     },
     author: {
         type: Schema.Types.ObjectId,
-        ref: 'User',  // Reference to the user who made the comment
+        ref: 'User',
         required: true,
     },
     content: {
@@ -25,12 +27,13 @@ const CommentSchema = new Schema({
     },
     likes: [{
         type: Schema.Types.ObjectId,
-        ref: 'User',  // Users who liked the comment
+        ref: 'User',
     }],
     replies: [{
         type: Schema.Types.ObjectId,
-        ref: 'Comment',  // Self-referencing: replies to comments
+        ref: 'Comment',
     }]
 }, { timestamps: true });
 
-export default model<IComment>('Comment', CommentSchema);
+// Define and export the model with typing
+export const Comment: Model<IComment> = model<IComment>('Comment', CommentSchema);

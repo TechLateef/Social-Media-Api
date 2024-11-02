@@ -1,7 +1,7 @@
 import { createCommentDto, CreatePostDto } from "../dto/post.dto";
 import { Auth, IUser } from "../../auth/entities/auth.entity";
 import { IPost, Post } from "../entities/post.entity";
-import commentEntity, { IComment } from "../entities/comment.entity";
+import  { IComment, Comment } from "../entities/comment.entity";
 import { Model, Document, Types } from "mongoose";
 import jsonResponse from "../../../core/utils/lib";
 import { StatusCodes } from "http-status-codes";
@@ -43,38 +43,38 @@ export class PostService {
  * @param user - The authenticated user performing the action
  * @returns boolean - true if liked, false if unliked
  */
-    public async likeOrUnlike<T extends ILikable>(
+    public async likeOrUnlike<T extends Document>(
         entityType: Model<T>,
         entityId: string,
         user: IUser
     ): Promise<boolean> {
         try {
-            // Find the entity (could be a post or a comment)
             const entity = await entityType.findById(entityId);
-
+    
             if (!entity) {
                 throw new Error(`${entityType.modelName} with ID ${entityId} not found`);
             }
-
-            const userId = user.id;
-
-            // Check if user has already liked the entity
-            if (!entity.likes.includes(userId)) {
-                // Add user to the likes array
-                await entity.updateOne({ $push: { likes: userId } });
-                return true; // Entity was liked
+    
+            if (!("likes" in entity)) {
+                throw new Error("This entity does not support likes functionality.");
             }
-
-            // Remove user from the likes array
+    
+            const userId = new Types.ObjectId(user.id);
+    
+            if (!(entity.likes as Types.ObjectId[]).includes(userId)) {
+                await entity.updateOne({ $push: { likes: userId } });
+                return true;
+            }
+    
             await entity.updateOne({ $pull: { likes: userId } });
-            return false; // Entity was unliked
-
+            return false;
+    
         } catch (error) {
             console.error(`Error liking or unliking ${entityType.modelName}:`, error);
             throw error;
         }
     }
-
+    
 
     /**
      * @description fetch user post and  following users
@@ -105,18 +105,22 @@ export class PostService {
      * @param postId - string 
      * @returns 
      */
-    public async commentOnPost(commentData: createCommentDto, postId: string): Promise<IComment> {
-        // Check if the post exists
-        const post = await Post.findById(postId);
-        if (!post) {
-            throw new Error(`Post with ID ${postId} not found`);
-        }
-
-        // Create a new comment and associate it with the post
-        const newComment = await commentEntity.create({ post: post._id, ...commentData });
-        await newComment.save();
-
-        return newComment;
+    public async commentOnPost(commentData: createCommentDto, postId: string, res: Response): Promise<IComment | void> {
+      try {
+          // Check if the post exists
+          const post = await Post.findById(postId);
+          if (!post) {
+              throw new Error(`Post with ID ${postId} not found`);
+          }
+  
+          // Create a new comment and associate it with the post
+          const newComment = await Comment.create({ post: post._id, ...commentData });
+          await newComment.save();
+  
+          return newComment;
+      } catch (error) {
+        jsonResponse(StatusCodes.INTERNAL_SERVER_ERROR,'',res)
+      }
     }
 
     /**
@@ -128,13 +132,13 @@ export class PostService {
     public async replyComment(replyData: createCommentDto, commentId: string): Promise<IComment> {
         try {
             // Check if the comment exists
-            const comment = await commentEntity.findById(commentId);
+            const comment = await Comment.findById(commentId);
             if (!comment) {
                 throw new Error(`Comment with ID ${commentId} not found`);
             }
 
             // Create a new reply
-            const newReply = await commentEntity.create({ ...replyData });
+            const newReply = await Comment.create({ ...replyData });
             await newReply.save();
 
             // Add the new reply to the existing comment's replies array

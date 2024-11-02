@@ -7,6 +7,7 @@ import { StatusCodes } from "http-status-codes";
 import { IPost, Post } from "../entities/post.entity";
 import { IUser } from "../../auth/entities/auth.entity";
 import jsonResponse from "../../../core/utils/lib";
+import { IComment, Comment } from "../entities/comment.entity";
 
 
 
@@ -14,6 +15,14 @@ export class PostController {
     constructor(private readonly postService: PostService) { }
 
 
+    /**
+     * @description  make new post
+     * @access private
+     * @route POST /post
+     * @param req 
+     * @param res 
+     * @param next 
+     */
     public post: RequestHandler = async (req, res, next): Promise<void> => {
         try {
             const postData = plainToClass(CreatePostDto, req.body)
@@ -33,6 +42,14 @@ export class PostController {
     }
 
 
+    /**
+     * @description make a comment on a post
+     * @access private
+     * @route POST /comment
+     * @param req 
+     * @param res 
+     * @param next 
+     */
     public postComment: RequestHandler = async (req, res, next): Promise<void> => {
         try {
             const postId = req.params.postId
@@ -43,7 +60,7 @@ export class PostController {
 
             }
 
-            const newComment = await this.postService.commentOnPost(commentDataDto, postId)
+            const newComment = await this.postService.commentOnPost(commentDataDto, postId, res)
 
             res.status(StatusCodes.OK).json({ message: 'success' })
         } catch (error) {
@@ -53,7 +70,15 @@ export class PostController {
     }
 
 
-    public likeorUnlikePost: RequestHandler = async (req, res, next): Promise<void> => {
+    /**
+     * @description toggle like for a post
+     * @access private
+     * @route PATCH /post/:postId 
+     * @param req 
+     * @param res 
+     * @param next 
+     */
+    public toggleLikePost: RequestHandler = async (req, res, next): Promise<void> => {
         try {
             const postId = req.params.postId
 
@@ -68,20 +93,112 @@ export class PostController {
     }
 
 
+    /**
+     * @description get all post
+     * @access private
+     * @route GET /post
+     * @param req 
+     * @param res 
+     * @param next 
+     * @returns 
+     */
     public fetchPost: RequestHandler = async (req, res, next): Promise<void> => {
- try {
-    const user = req.user as IUser
+        try {
+            const user = req.user as IUser
 
-    const allPost = await this.postService.fetchAllPosts(user,res)
-    if (!allPost) {
-        return allPost
+            const allPost = await this.postService.fetchAllPosts(user, res)
+            if (!allPost) {
+                return allPost
+            }
+
+            jsonResponse(StatusCodes.OK, '', res, 'success')
+
+        } catch (error) {
+            next(error)
+        }
+
     }
 
-    jsonResponse(StatusCodes.OK, '', res, 'success')
 
- } catch (error) {
-  next(error)  
- }
+    /**
+     * @description comment on a post
+     * @access private
+     * @route POST /comment
+     * @param req 
+     * @param res 
+     * @param next 
+     */
+
+    public commentOnPost: RequestHandler = async (req, res, next): Promise<void> => {
+
+        try {
+            const user = req.user as IUser;
+            const postId = req.params.postId
+
+            const commentData = plainToClass(createCommentDto, req.body)
+
+            commentData.author = user
+            await validate(commentData)
+
+            const newComment = await this.postService.commentOnPost(commentData, postId, res)
+
+            jsonResponse(StatusCodes.OK, newComment, res)
+
+        } catch (error) {
+            next(error)
+        }
+
 
     }
+
+    /**
+     * @description reply to comment using the comment id
+     * @access private
+     * @route POST /comment/reply
+     * @param req 
+     * @param res 
+     * @param next 
+     */
+    public replyComment: RequestHandler = async (req, res, next): Promise<void> => {
+        try {
+            const user = req.user as IUser
+
+            const commentId = req.params.commentId
+
+            const replyData = plainToClass(createCommentDto, req.body)
+
+            replyData.author = user
+
+            await validate(replyData)
+            const newReply = await this.postService.replyComment(replyData, commentId)
+
+            jsonResponse(StatusCodes.OK, newReply, res)
+        } catch (error) {
+            next(error)
+        }
+
+    }
+
+/**
+ * @description Toggle like a comment
+ * @access private
+ * @route PATCH /comment/:commentId
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+    public toggleLikeComment: RequestHandler = async (req, res, next): Promise<void> => {
+        try {
+            const postId = req.params.postId
+
+            const user = req.user as IUser
+            const liked = await this.postService.likeOrUnlike(Comment, postId, user)
+
+            jsonResponse(StatusCodes.OK, '', res, liked ? "Comment liked" : "Comment unliked")
+        } catch (error) {
+            next(error)
+        }
+
+    }
+
 }

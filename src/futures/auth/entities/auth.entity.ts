@@ -16,6 +16,7 @@ export interface IUser extends Document {
     following: Types.ObjectId[];  // Array of user IDs this user is following
     getResetPasswordToken(): string;
     getSignedToken(): string;
+    changesPasswordAfter(tokenTimeStamp: number): string;
     resetPasswordToken: string | undefined;
     resetPasswordExpire: number | undefined;
     matchPassword(password: string): Promise<boolean>;
@@ -75,6 +76,11 @@ const AuthSchema = new Schema({
     },
     resetPasswordToken: String,
     resetPasswordExpire: Number,
+    passwordChangedAt: {
+        type: Date,
+        select: false,
+        default: Date.now(),
+    },
 }, { timestamps: true });
 
 // Password hashing middleware
@@ -94,11 +100,18 @@ AuthSchema.methods.matchPassword = async function (password: string) {
 
 // Generate JWT
 AuthSchema.methods.getSignedToken = function () {
-    return jwt.sign({ id: this._id }, process.env.JWT_SECRET!, {
+    return jwt.sign({ userId: this._id, name: this.name, iat: Date.now() + 1000 }, process.env.JWT_SECRET!, {
         expiresIn: process.env.JWT_EXPIRE || '1h',
     });
 };
 
+AuthSchema.methods.changesPasswordAfter = function (tokenTimeStamp: number) {
+    if (this.passwordChangedAt) {
+        const lastPassChangedAt = this.passwordChangedAt.getTime() / 1000
+        return tokenTimeStamp < lastPassChangedAt
+    }
+    return false
+}
 // Generate Reset Password Token
 AuthSchema.methods.getResetPasswordToken = function () {
     const resetToken = crypto.randomBytes(20).toString('hex');

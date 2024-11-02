@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import * as multer from 'multer';
+import  multer from 'multer';
 import { StatusCodes } from 'http-status-codes';
 import { cloudMulterStorage, multerStorageDev, imageFilter, pdfFilter } from './awsStorage';
 import catchAsync from './catchAsync';
