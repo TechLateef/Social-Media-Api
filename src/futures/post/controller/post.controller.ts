@@ -8,11 +8,13 @@ import { IPost, Post } from "../entities/post.entity";
 import { IUser } from "../../auth/entities/auth.entity";
 import jsonResponse from "../../../core/utils/lib";
 import { IComment, Comment } from "../entities/comment.entity";
+import { NotificationService } from "../../notification/service/notication.service";
 
 
 
 export class PostController {
-    constructor(private readonly postService: PostService) { }
+    constructor(private readonly postService: PostService,    private readonly notificationService: NotificationService 
+    ) { }
 
 
     /**

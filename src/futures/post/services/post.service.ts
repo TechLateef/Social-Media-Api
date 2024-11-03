@@ -1,7 +1,7 @@
 import { createCommentDto, CreatePostDto } from "../dto/post.dto";
 import { Auth, IUser } from "../../auth/entities/auth.entity";
 import { IPost, Post } from "../entities/post.entity";
-import  { IComment, Comment } from "../entities/comment.entity";
+import { IComment, Comment } from "../entities/comment.entity";
 import { Model, Document, Types } from "mongoose";
 import jsonResponse from "../../../core/utils/lib";
 import { StatusCodes } from "http-status-codes";
@@ -34,6 +34,13 @@ export class PostService {
     }
 
 
+    public async getPostById(postId: string, res: Response) {
+        const post = await Post.findById(postId)
+        if (!post) {
+            jsonResponse(StatusCodes.BAD_REQUEST, '', res, `Post with the Id${postId} not found`)
+        }
+        return post
+    }
 
 
     /**
@@ -50,31 +57,31 @@ export class PostService {
     ): Promise<boolean> {
         try {
             const entity = await entityType.findById(entityId);
-    
+
             if (!entity) {
                 throw new Error(`${entityType.modelName} with ID ${entityId} not found`);
             }
-    
+
             if (!("likes" in entity)) {
                 throw new Error("This entity does not support likes functionality.");
             }
-    
+
             const userId = new Types.ObjectId(user.id);
-    
+
             if (!(entity.likes as Types.ObjectId[]).includes(userId)) {
                 await entity.updateOne({ $push: { likes: userId } });
                 return true;
             }
-    
+
             await entity.updateOne({ $pull: { likes: userId } });
             return false;
-    
+
         } catch (error) {
             console.error(`Error liking or unliking ${entityType.modelName}:`, error);
             throw error;
         }
     }
-    
+
 
     /**
      * @description fetch user post and  following users
@@ -106,21 +113,21 @@ export class PostService {
      * @returns 
      */
     public async commentOnPost(commentData: createCommentDto, postId: string, res: Response): Promise<IComment | void> {
-      try {
-          // Check if the post exists
-          const post = await Post.findById(postId);
-          if (!post) {
-              throw new Error(`Post with ID ${postId} not found`);
-          }
-  
-          // Create a new comment and associate it with the post
-          const newComment = await Comment.create({ post: post._id, ...commentData });
-          await newComment.save();
-  
-          return newComment;
-      } catch (error) {
-        jsonResponse(StatusCodes.INTERNAL_SERVER_ERROR,'',res)
-      }
+        try {
+            // Check if the post exists
+            const post = await Post.findById(postId);
+            if (!post) {
+                throw new Error(`Post with ID ${postId} not found`);
+            }
+
+            // Create a new comment and associate it with the post
+            const newComment = await Comment.create({ post: post._id, ...commentData });
+            await newComment.save();
+
+            return newComment;
+        } catch (error) {
+            jsonResponse(StatusCodes.INTERNAL_SERVER_ERROR, '', res)
+        }
     }
 
     /**
